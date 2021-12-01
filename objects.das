@@ -15,6 +15,7 @@ struct Unit
     speed: float = 0.0
     direction: float2 = float2(1.0, 0.0)
     speedMax: float
+    max_hp: int
     hp: int
     damage: int
     color: uint const

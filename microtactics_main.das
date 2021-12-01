@@ -19,12 +19,14 @@ var
 def create_ally_unit(pos: float2)
     var id: int = get_id()
     ally_units[id] <- [[
-        Unit() id=id, pos=pos, size_radius=60.0, speedMax=80.0, hp=40, damage=5, color = 0xFF156800, direction = float2(-1.0, 0.0)
+        Unit() id=id, 
+        pos=pos, size_radius=60.0, speedMax=80.0, hp=40, max_hp=40, damage=5,
+        color = 0xFF156800, direction = float2(-1.0, 0.0)
         ]]
 
 def create_enemy_unit(pos: float2)
     var id: int = get_id()
-    enemy_units[id] <- [[Unit() id=id, pos=pos, size_radius=60.0, speedMax=80.0, hp=40, damage=5, color = 0xFFA00000]]
+    enemy_units[id] <- [[Unit() id=id, pos=pos, size_radius=60.0, speedMax=80.0, hp=40, max_hp=40, damage=5, color = 0xFFA00000]]
 
 def render_centered_rect(pos: float2; size: float; color: uint; offset: float = 0.0)
     rect(pos.x - size/2.0 - offset, pos.y - size/2.0 - offset, size + offset * 2.0, size + offset * 2.0, color)
@@ -44,6 +46,10 @@ def render_unit_core(var u: Unit; var img: Image; color: uint = 0xFFFFFFFF)
     img |> draw_image_transformed(
         u.pos.x, u.pos.y, float4(0.0, 0.0, float(img.width), float(img.height)), color, float2(x_size, y_size), rotation
         )
+
+    var hp_k = float(u.hp) / float(u.max_hp)
+    fill_rect(u.pos.x - u.size_radius, u.pos.y - u.size_radius - 10.0, u.size_radius * 2.0, 8.0, 0xB7FF0202)
+    fill_rect(u.pos.x - u.size_radius, u.pos.y - u.size_radius - 10.0, hp_k * u.size_radius * 2.0, 8.0, 0xFF35FF02)
 
 def render_ally_unit(var u: Unit)
     if u.hp > 0
@@ -75,9 +81,9 @@ def select
     if get_mouse_button_down(MB_LEFT)
         var mouse_pos: float2 = get_mouse_position()
         clear(selection)
-        for k, v in keys(ally_units), values(ally_units)
-            if length(mouse_pos - v.pos) < 30.0
-                emplace(selection, v.id)
+        for unit in values(ally_units)
+            if length(mouse_pos - unit.pos) < unit.size_radius
+                emplace(selection, unit.id)
 
 def add_commands
     if get_mouse_button_down(MB_RIGHT)
@@ -90,9 +96,9 @@ def add_commands
 
                 clear(ally_units[id].command_queue)
 
-                for k, v in keys(enemy_units), values(enemy_units)
-                    if length(mouse_pos-v.pos) < 30.0
-                        push(ally_units[id].command_queue, new AttackTarget(v.id))
+                for enemy in values(enemy_units)
+                    if length(mouse_pos-enemy.pos) < enemy.size_radius / 1.5
+                        push(ally_units[id].command_queue, new AttackTarget(enemy.id))
                         break
 
                 if length(ally_units[id].command_queue) == 0
