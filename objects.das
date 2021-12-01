@@ -21,7 +21,7 @@ struct Unit
     attack_range: float const = 200.0
     attack_rate: float const = 1.0
     attack_cooldown: float = 1.0
-    command_stack: array<Command?>
+    command_queue: array<Command?>
 
 
 class Command

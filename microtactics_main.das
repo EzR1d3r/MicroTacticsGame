@@ -28,7 +28,7 @@ def render_unit(var u: Unit)
     text_out(u.pos.x, u.pos.y, "X {u.pos.x}", 0xFFFFFFFF)
     text_out(u.pos.x, u.pos.y+15.0, "Y {u.pos.y}", 0xFFFFFFFF)
     text_out(u.pos.x, u.pos.y+30.0, "ID {u.id}", 0xFFFFFFFF)
-    text_out(u.pos.x, u.pos.y+45.0, "CM {length(u.command_stack)}", 0xFFFFFFFF)
+    text_out(u.pos.x, u.pos.y+45.0, "CM {length(u.command_queue)}", 0xFFFFFFFF)
     text_out(u.pos.x, u.pos.y+60.0, "HP {u.hp}", 0xFFFFFFFF)
     text_out(u.pos.x, u.pos.y+75.0, "CD {u.attack_cooldown}", 0xFFFFFFFF)
 
@@ -51,28 +51,28 @@ def add_commands
 
         for id in selection
             if key_exists(ally_units, id)
-                // for cmd in ally_units[id].command_stack
+                // for cmd in ally_units[id].command_queue
                 //     cmd->done(ally_units[id])
 
-                clear(ally_units[id].command_stack)
+                clear(ally_units[id].command_queue)
 
                 for k, v in keys(enemy_units), values(enemy_units)
                     if length(mouse_pos-v.pos) < 30.0
-                        push(ally_units[id].command_stack, new AttackTarget(v.id))
+                        push(ally_units[id].command_queue, new AttackTarget(v.id))
                         break
 
-                if length(ally_units[id].command_stack) == 0
-                    push(ally_units[id].command_stack, new MovePos(mouse_pos))
+                if length(ally_units[id].command_queue) == 0
+                    push(ally_units[id].command_queue, new MovePos(mouse_pos))
 
 
 def process_commands_core(dt: float; var map: table<int; Unit>)
     for k, v in keys(map), values(map)
         var idx = 0
-        while (length(v.command_stack) != 0) && (idx < length(v.command_stack))
-            v.command_stack[idx]->process(v, dt)
+        while (length(v.command_queue) != 0) && (idx < length(v.command_queue))
+            v.command_queue[idx]->process(v, dt)
 
-            if v.command_stack[idx]->is_done(v)
-                erase(v.command_stack, idx)
+            if v.command_queue[idx]->is_done(v)
+                erase(v.command_queue, idx)
             else
                 idx++
 
@@ -84,11 +84,7 @@ def common_render
     // text_out(30.0, 30.0, "CD {0%4}", 0xFFFFFFFF)
     pass
 
-[export]
-def initialize
-    set_window_title("MicroTactics")
-    randomize_seed(seed)
-    set_resolution(screen_width, screen_height)
+def init_test_game
     create_ally_unit(float2(1000.0, 300.0))
     create_ally_unit(float2(1000.0, 400.0))
     create_ally_unit(float2(1000.0, 500.0))
@@ -102,7 +98,14 @@ def initialize
     var ids <- [{for k in keys(ally_units); k}]
     for enemy in values(enemy_units)
         var i = random_int(seed) % length(ids)
-        push(enemy.command_stack, new AttackTarget(ids[i]))
+        push(enemy.command_queue, new AttackTarget(ids[i]))
+
+[export]
+def initialize
+    set_window_title("MicroTactics")
+    randomize_seed(seed)
+    set_resolution(screen_width, screen_height)
+    init_test_game()
     return
 
 // this function is called to update game data,
