@@ -13,46 +13,70 @@ struct Unit
     damage: int
     img: string
     color: uint const
-    attack_range: float const = 50.0
+    attack_range: float const = 200.0
     attack_rate: float const = 1.0
-    attack_cooldown: float = 0.0
+    attack_cooldown: float = 1.0
     command_stack: array<Command?>
 
-enum CommandType
-    MOVE
-    ATTACK_TARGET
-    MOVE_ATTACK
 
 class Command
-    cmd_type: CommandType
+    def abstract process(var unit: Unit; dt: float): void
+    def abstract is_done(var unit: Unit): bool
+    def abstract done(var unit: Unit): void
+
+
+class MovePos: Command
     pos: float2
-    target: int
 
-    def Command(var cmd_type_: CommandType; var pos_: float2; var target_: int)
-        cmd_type = cmd_type_
+    def MovePos(var pos_: float2)
         pos = pos_
-        target = target_
 
-    def process(var unit: Unit)
-        if cmd_type == CommandType MOVE
-            if is_done(unit)
-                done(unit)
-            else
-                // var k = length(unit.speed) < unit.speedMax ? 20.0 : 1.0
-                unit.speed = unit.speedMax * normalize(pos - unit.pos)
+    def override  process(var unit: Unit; dt: float)
+        if is_done(unit)
+            done(unit)
+        else
+            // var k = length(unit.speed) < unit.speedMax ? 20.0 : 1.0
+            unit.speed = unit.speedMax * normalize(pos - unit.pos)
 
-    def is_done(unit: Unit): bool
-        if cmd_type == CommandType MOVE
-            if length(pos - unit.pos) <= 1.0
-                return true
-            else
-                return false
+    def override is_done(unit: Unit): bool
+        if length(pos - unit.pos) <= 1.0
+            return true
+        else
+            return false
 
-        return false
+    def override done(var unit: Unit)
+        unit.speed = float2(0.0, 0.0)
 
-    def done(var unit: Unit)
-        if cmd_type == CommandType MOVE
-            unit.speed = float2(0.0, 0.0)
+
+class AttackTarget: Command
+    target_id: int
+
+    def AttackTarget(var target_id_: int)
+        target_id = target_id_
+
+    def override process(var unit: Unit; dt: float)
+        if is_done(unit)
+            done(unit)
+        else
+            if key_exists(enemy_units, target_id)
+                try_attack(unit, enemy_units[target_id], dt)
+            elif key_exists(ally_units, target_id)
+                try_attack(unit, ally_units[target_id], dt)
+
+    def override is_done(unit: Unit): bool
+        var b: bool = key_exists(ally_units, target_id) && ally_units[target_id].hp <= 0
+        b ||= key_exists(enemy_units, target_id) && enemy_units[target_id].hp <= 0
+        return b
+
+    def override done(var unit: Unit)
+        unit.attack_cooldown = unit.attack_rate
+
+    def private try_attack(var shooter: Unit; var target: Unit; dt: float)
+        if (length(target.pos - shooter.pos) <= shooter.attack_range)
+            shooter.speed = float2(0.0, 0.0)
+            shoot(shooter, target, dt)
+        else
+            shooter.speed = shooter.speedMax * normalize(target.pos - shooter.pos)
 
 var
     screen_width = 1440
@@ -63,31 +87,41 @@ var
     selection: array<int>
 
 
-def shoot(var shooter: Unit; var target: Unit)
-    pass
+def shoot(var shooter: Unit; var target: Unit; dt: float)
+    if shooter.attack_cooldown < shooter.attack_rate
+        shooter.attack_cooldown+=dt
+    else
+        if target.hp > 0
+            make_damage(target, shooter.damage)
+            shooter.attack_cooldown = 0.0
+
+def make_damage(var target: Unit; value: int)
+    target.hp -= value
 
 def get_id
     return ++increment_id
 
 def create_ally_unit(pos: float2)
     var id: int = get_id()
-    ally_units[id] <- [[Unit id=id, pos=pos, size_radius=20.0, speedMax=80.0, hp=40, damage=5, color = 0xFF156800]]
+    ally_units[id] <- [[Unit() id=id, pos=pos, size_radius=20.0, speedMax=80.0, hp=40, damage=5, color = 0xFF156800]]
 
 def create_enemy_unit(pos: float2)
     var id: int = get_id()
-    enemy_units[id] <- [[Unit id=id, pos=pos, size_radius=20.0, speedMax=80.0, hp=40, damage=5, color = 0xFFA00000]]
+    enemy_units[id] <- [[Unit() id=id, pos=pos, size_radius=20.0, speedMax=80.0, hp=40, damage=5, color = 0xFFA00000]]
 
 def render_centered_rect(pos: float2; size: float; color: uint; offset: float = 0.0)
     rect(pos.x - size/2.0 - offset, pos.y - size/2.0 - offset, size + offset * 2.0, size + offset * 2.0, color)
 
 def render_unit(var u: Unit)
-    fill_circle(u.pos.x, u.pos.y, u.size_radius, u.color)
+    var color = u.hp <= 0 ? desaturate_color(u.color) : u.color
+    fill_circle(u.pos.x, u.pos.y, u.size_radius, color)
     set_font_size(10)
     text_out(u.pos.x, u.pos.y, "X {u.pos.x}", 0xFFFFFFFF)
     text_out(u.pos.x, u.pos.y+15.0, "Y {u.pos.y}", 0xFFFFFFFF)
     text_out(u.pos.x, u.pos.y+30.0, "ID {u.id}", 0xFFFFFFFF)
     text_out(u.pos.x, u.pos.y+45.0, "CM {length(u.command_stack)}", 0xFFFFFFFF)
     text_out(u.pos.x, u.pos.y+60.0, "HP {u.hp}", 0xFFFFFFFF)
+    text_out(u.pos.x, u.pos.y+75.0, "CD {u.attack_cooldown}", 0xFFFFFFFF)
 
 def render_cursor
     var mouse_pos: float2 = get_mouse_position()
@@ -115,18 +149,18 @@ def add_commands
 
                 for k, v in keys(enemy_units), values(enemy_units)
                     if length(mouse_pos-v.pos) < 30.0
-                        push(ally_units[id].command_stack, new Command(CommandType ATTACK_TARGET, mouse_pos, v.id))
+                        push(ally_units[id].command_stack, new AttackTarget(v.id))
                         break
 
                 if length(ally_units[id].command_stack) == 0
-                    push(ally_units[id].command_stack, new Command(CommandType MOVE, mouse_pos, -1))
+                    push(ally_units[id].command_stack, new MovePos(mouse_pos))
 
 
-def process_commands
+def process_commands(dt: float)
     for k, v in keys(ally_units), values(ally_units)
         var idx = 0
         while (length(v.command_stack) != 0) && (idx < length(v.command_stack))
-            v.command_stack[idx]->process(v)
+            v.command_stack[idx]->process(v, dt)
 
             if v.command_stack[idx]->is_done(v)
                 erase(v.command_stack, idx)
@@ -136,6 +170,9 @@ def process_commands
 def move_all(dt: float)
     for k, v in keys(ally_units), values(ally_units)
         v.pos += v.speed * dt
+
+def common_render
+    pass
 
 [export]
 def initialize
@@ -160,7 +197,7 @@ def act(dt: float)
         schedule_quit_game()
     select()
     add_commands()
-    process_commands()
+    process_commands(dt)
     move_all(dt)
     return
 
@@ -168,6 +205,7 @@ def act(dt: float)
 // you can draw anything in this function
 [export]
 def draw
+    common_render()
     for k, v in keys(ally_units), values(ally_units)
         render_unit(v)
 
