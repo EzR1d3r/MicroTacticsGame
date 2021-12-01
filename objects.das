@@ -16,7 +16,6 @@ struct Unit
     speedMax: float
     hp: int
     damage: int
-    img: string
     color: uint const
     attack_range: float const = 200.0
     attack_rate: float const = 1.0

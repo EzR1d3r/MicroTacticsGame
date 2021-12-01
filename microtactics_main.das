@@ -9,21 +9,40 @@ var
     screen_height = 800
     selection: array<int>
     seed: int4
+    img_ally: Image
+    img_enemy: Image
+    img_dead: Image
+    image_scale_k: float const = 1.2
 
 def create_ally_unit(pos: float2)
     var id: int = get_id()
-    ally_units[id] <- [[Unit() id=id, pos=pos, size_radius=20.0, speedMax=80.0, hp=40, damage=5, color = 0xFF156800]]
+    ally_units[id] <- [[Unit() id=id, pos=pos, size_radius=50.0, speedMax=80.0, hp=40, damage=5, color = 0xFF156800]]
 
 def create_enemy_unit(pos: float2)
     var id: int = get_id()
-    enemy_units[id] <- [[Unit() id=id, pos=pos, size_radius=20.0, speedMax=80.0, hp=40, damage=5, color = 0xFFA00000]]
+    enemy_units[id] <- [[Unit() id=id, pos=pos, size_radius=50.0, speedMax=80.0, hp=40, damage=5, color = 0xFFA00000]]
 
 def render_centered_rect(pos: float2; size: float; color: uint; offset: float = 0.0)
     rect(pos.x - size/2.0 - offset, pos.y - size/2.0 - offset, size + offset * 2.0, size + offset * 2.0, color)
 
 def render_unit(var u: Unit)
     var color = u.hp <= 0 ? desaturate_color(u.color) : u.color
-    fill_circle(u.pos.x, u.pos.y, u.size_radius, color)
+    circle(u.pos.x, u.pos.y, u.size_radius, color)
+    img_ally |> premultiply_alpha()
+    var x_size = image_scale_k * float(img_ally.width) * u.size_radius / float(img_ally.height)
+    var y_size = image_scale_k * float(img_ally.height) * u.size_radius / float(img_ally.height)
+    var ky = u.size_radius / float(img_ally.height)
+
+    //calc rotation
+    var res_vec = normalize(u.speed)
+    var rotation = res_vec.y >= 0.0 ? acos(res_vec.x) : 2.0 * PI - acos(res_vec.x)
+
+    //draw img
+    img_ally |> draw_image_transformed(
+        u.pos.x, u.pos.y, float4(0.0, 0.0, float(img_ally.width), float(img_ally.height)), 0xFFFFFFFF, float2(x_size, y_size), rotation
+        )
+
+def render_debug_info(var u: Unit)
     set_font_size(10)
     text_out(u.pos.x, u.pos.y, "X {u.pos.x}", 0xFFFFFFFF)
     text_out(u.pos.x, u.pos.y+15.0, "Y {u.pos.y}", 0xFFFFFFFF)
@@ -100,11 +119,17 @@ def init_test_game
         var i = random_int(seed) % length(ids)
         push(enemy.command_queue, new AttackTarget(ids[i]))
 
+def load_resourses
+    img_ally <- create_image("resources/tank_ally.png")
+    img_enemy <- create_image("resources/tank_enemy.png")
+    img_dead <- create_image("resources/tank_dead.png")
+
 [export]
 def initialize
     set_window_title("MicroTactics")
     randomize_seed(seed)
     set_resolution(screen_width, screen_height)
+    load_resourses()
     init_test_game()
     return
 
