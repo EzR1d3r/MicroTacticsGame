@@ -78,6 +78,7 @@ class AttackTarget: Command
         else
             shooter.speed = shooter.speedMax * normalize(target.pos - shooter.pos)
 
+// globals
 var
     screen_width = 1440
     screen_height = 800
@@ -85,6 +86,7 @@ var
     ally_units: table<int; Unit>
     enemy_units: table<int; Unit>
     selection: array<int>
+    seed: int4
 
 
 def shoot(var shooter: Unit; var target: Unit; dt: float)
@@ -156,8 +158,8 @@ def add_commands
                     push(ally_units[id].command_stack, new MovePos(mouse_pos))
 
 
-def process_commands(dt: float)
-    for k, v in keys(ally_units), values(ally_units)
+def process_commands_core(dt: float; var map: table<int; Unit>)
+    for k, v in keys(map), values(map)
         var idx = 0
         while (length(v.command_stack) != 0) && (idx < length(v.command_stack))
             v.command_stack[idx]->process(v, dt)
@@ -167,16 +169,18 @@ def process_commands(dt: float)
             else
                 idx++
 
-def move_all(dt: float)
-    for k, v in keys(ally_units), values(ally_units)
-        v.pos += v.speed * dt
+def move_units(dt: float; var map: table<int; Unit>)
+    for unit in values(map)
+        unit.pos += unit.speed * dt
 
 def common_render
+    // text_out(30.0, 30.0, "CD {0%4}", 0xFFFFFFFF)
     pass
 
 [export]
 def initialize
     set_window_title("MicroTactics")
+    randomize_seed(seed)
     set_resolution(screen_width, screen_height)
     create_ally_unit(float2(1000.0, 300.0))
     create_ally_unit(float2(1000.0, 400.0))
@@ -187,6 +191,11 @@ def initialize
     create_enemy_unit(float2(200.0, 400.0))
     create_enemy_unit(float2(200.0, 500.0))
     create_enemy_unit(float2(200.0, 600.0))
+
+    var ids <- [{for k in keys(ally_units); k}]
+    for enemy in values(enemy_units)
+        var i = random_int(seed) % length(ids)
+        push(enemy.command_stack, new AttackTarget(ids[i]))
     return
 
 // this function is called to update game data,
@@ -197,8 +206,10 @@ def act(dt: float)
         schedule_quit_game()
     select()
     add_commands()
-    process_commands(dt)
-    move_all(dt)
+    process_commands_core(dt, ally_units)
+    process_commands_core(dt, enemy_units)
+    move_units(dt, ally_units)
+    move_units(dt, enemy_units)
     return
 
 // this function will be called every frame after 'act',
