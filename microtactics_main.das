@@ -1,5 +1,6 @@
 require daslib/media
-
+require graphics
+require dasbox
 require objects
 // options debugger            // uncomment for debug in VS Code
 // require daslib/debug        // uncomment for debug in VS Code
@@ -12,35 +13,49 @@ var
     img_ally: Image
     img_enemy: Image
     img_dead: Image
+    img_background: Image
     image_scale_k: float const = 1.2
 
 def create_ally_unit(pos: float2)
     var id: int = get_id()
-    ally_units[id] <- [[Unit() id=id, pos=pos, size_radius=50.0, speedMax=80.0, hp=40, damage=5, color = 0xFF156800]]
+    ally_units[id] <- [[
+        Unit() id=id, pos=pos, size_radius=60.0, speedMax=80.0, hp=40, damage=5, color = 0xFF156800, direction = float2(-1.0, 0.0)
+        ]]
 
 def create_enemy_unit(pos: float2)
     var id: int = get_id()
-    enemy_units[id] <- [[Unit() id=id, pos=pos, size_radius=50.0, speedMax=80.0, hp=40, damage=5, color = 0xFFA00000]]
+    enemy_units[id] <- [[Unit() id=id, pos=pos, size_radius=60.0, speedMax=80.0, hp=40, damage=5, color = 0xFFA00000]]
 
 def render_centered_rect(pos: float2; size: float; color: uint; offset: float = 0.0)
     rect(pos.x - size/2.0 - offset, pos.y - size/2.0 - offset, size + offset * 2.0, size + offset * 2.0, color)
 
-def render_unit(var u: Unit)
-    var color = u.hp <= 0 ? desaturate_color(u.color) : u.color
-    circle(u.pos.x, u.pos.y, u.size_radius, color)
-    img_ally |> premultiply_alpha()
-    var x_size = image_scale_k * float(img_ally.width) * u.size_radius / float(img_ally.height)
-    var y_size = image_scale_k * float(img_ally.height) * u.size_radius / float(img_ally.height)
-    var ky = u.size_radius / float(img_ally.height)
+def render_unit_core(var u: Unit; var img: Image; color: uint = 0xFFFFFFFF)
+    fill_circle(u.pos.x, u.pos.y, 15.0, u.color)
+
+    var x_size = image_scale_k * float(img.width) * u.size_radius / float(img.height)
+    var y_size = image_scale_k * float(img.height) * u.size_radius / float(img.height)
+    var ky = u.size_radius / float(img.height)
 
     //calc rotation
-    var res_vec = normalize(u.speed)
+    var res_vec = normalize(u.direction)
     var rotation = res_vec.y >= 0.0 ? acos(res_vec.x) : 2.0 * PI - acos(res_vec.x)
 
     //draw img
-    img_ally |> draw_image_transformed(
-        u.pos.x, u.pos.y, float4(0.0, 0.0, float(img_ally.width), float(img_ally.height)), 0xFFFFFFFF, float2(x_size, y_size), rotation
+    img |> draw_image_transformed(
+        u.pos.x, u.pos.y, float4(0.0, 0.0, float(img.width), float(img.height)), color, float2(x_size, y_size), rotation
         )
+
+def render_ally_unit(var u: Unit)
+    if u.hp > 0
+        render_unit_core(u, img_ally)
+    else
+        render_unit_core(u, img_dead, 0xFFA35207)
+
+def render_enemy_unit(var u: Unit)
+    if u.hp > 0
+        render_unit_core(u, img_enemy)
+    else
+        render_unit_core(u, img_dead, 0xFFA35207)
 
 def render_debug_info(var u: Unit)
     set_font_size(10)
@@ -97,11 +112,10 @@ def process_commands_core(dt: float; var map: table<int; Unit>)
 
 def move_units(dt: float; var map: table<int; Unit>)
     for unit in values(map)
-        unit.pos += unit.speed * dt
+        unit.pos += unit.speed* unit.direction * dt
 
 def common_render
-    // text_out(30.0, 30.0, "CD {0%4}", 0xFFFFFFFF)
-    pass
+    img_background |> draw_image(0.0, 0.0)
 
 def init_test_game
     create_ally_unit(float2(1000.0, 300.0))
@@ -123,6 +137,7 @@ def load_resourses
     img_ally <- create_image("resources/tank_ally.png")
     img_enemy <- create_image("resources/tank_enemy.png")
     img_dead <- create_image("resources/tank_dead.png")
+    img_background <- create_image("resources/background.jpg")
 
 [export]
 def initialize
@@ -151,12 +166,13 @@ def act(dt: float)
 // you can draw anything in this function
 [export]
 def draw
+    enable_alpha_blend()
     common_render()
-    for k, v in keys(ally_units), values(ally_units)
-        render_unit(v)
+    for unit in values(ally_units)
+        render_ally_unit(unit)
 
-    for k, v in keys(enemy_units), values(enemy_units)
-        render_unit(v)
+    for unit in values(enemy_units)
+        render_enemy_unit(unit)
 
     for id in selection
         if key_exists(ally_units, id)

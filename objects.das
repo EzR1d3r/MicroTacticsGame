@@ -12,7 +12,8 @@ struct Unit
     id: int
     pos: float2
     size_radius: float
-    speed: float2 = float2(0.0, 0.0)
+    speed: float = 0.0
+    direction: float2 = float2(1.0, 0.0)
     speedMax: float
     hp: int
     damage: int
@@ -39,8 +40,8 @@ class MovePos: Command
         if is_done(unit)
             done(unit)
         else
-            // var k = length(unit.speed) < unit.speedMax ? 20.0 : 1.0
-            unit.speed = unit.speedMax * normalize(pos - unit.pos)
+            unit.direction = normalize(pos - unit.pos)
+            unit.speed = unit.speedMax
 
     def override is_done(unit: Unit): bool
         if length(pos - unit.pos) <= 1.0
@@ -49,7 +50,7 @@ class MovePos: Command
             return false
 
     def override done(var unit: Unit)
-        unit.speed = float2(0.0, 0.0)
+        unit.speed = 0.0
 
 
 class AttackTarget: Command
@@ -77,10 +78,11 @@ class AttackTarget: Command
 
     def private try_attack(var shooter: Unit; var target: Unit; dt: float)
         if (length(target.pos - shooter.pos) <= shooter.attack_range)
-            shooter.speed = float2(0.0, 0.0)
+            shooter.speed = 0.0
             shoot(shooter, target, dt)
         else
-            shooter.speed = shooter.speedMax * normalize(target.pos - shooter.pos)
+            shooter.direction = normalize(target.pos - shooter.pos)
+            shooter.speed = shooter.speedMax
 
 def shoot(var shooter: Unit; var target: Unit; dt: float)
     if shooter.attack_cooldown < shooter.attack_rate
