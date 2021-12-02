@@ -38,7 +38,7 @@ def render_unit_core(var u: Unit; var img: Image; color: uint = 0xFFFFFFFF)
         fill_rect(u.pos.x - u.size_radius, u.pos.y - u.size_radius - 10.0, u.size_radius * 2.0, 8.0, 0xB7FF0202)
         fill_rect(u.pos.x - u.size_radius, u.pos.y - u.size_radius - 10.0, hp_k * u.size_radius * 2.0, 8.0, 0xFF35FF02)
 
-def render_shoot(var u: Unit; var img: Image)
+def render_shoot(u: Unit; var img: Image)
     var x_size = sprite_scale_k * float(img.width) * u.size_radius / float(img.height)
     var y_size = sprite_scale_k * float(img.height) * u.size_radius / float(img.height)
 
@@ -95,3 +95,8 @@ def main_menu
     text = "PRESS [SPACE] TO PAUSE OR [1-{length(rounds)}] TO CHOOSE ROUND"
     size = get_text_size(text)
     text_out(screen_width/2 - int(size.x/2.0), screen_height/4 + 200, text, 0xFFFFFFFF)
+
+    set_font_size(30)
+    text = "PRESS [C] TO SWITCH COLLISION MODE(develop in progress) [{calc_collision_on ? "ON" : "OFF"}]"
+    size = get_text_size(text)
+    text_out(screen_width/2 - int(size.x/2.0), screen_height/4 + 250, text, 0xFFFFFFFF)

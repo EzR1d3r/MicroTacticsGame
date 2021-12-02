@@ -4,7 +4,7 @@ require unit_presets
 require globals
 
 var
-    rounds: table<int;function> <- {{VK_1=>@@init_round1; VK_2=>@@init_round2}}
+    rounds: table<int;function> <- {{VK_1=>@@init_round1; VK_2=>@@init_round2; VK_3=>@@init_round3}}
     round_idx: int = 0
 
 def clear_units
@@ -38,6 +38,20 @@ def init_round2
     create_enemy_medium_tank(float2(200.0, 600.0))
     create_enemy_medium_tank(float2(200.0, 400.0))
     create_enemy_heavy_tank(float2(200.0, 200.0))
+
+    var ids <- [{for k in keys(ally_units); k}]
+    for enemy in values(enemy_units)
+        var random_id = ids[random_int(seed) % length(ids)]
+        push(enemy.command_queue, new MovePos(ally_units[random_id].pos - float2(enemy.attack_range, 0.0)))
+
+def init_round3
+    clear_units()
+    create_ally_heavy_tank(float2(1000.0, 200.0))
+    create_ally_heavy_tank(float2(1000.0, 300.0))
+
+    create_enemy_heavy_tank(float2(200.0, 200.0))
+    create_enemy_heavy_tank(float2(200.0, 300.0))
+    create_enemy_medium_tank(float2(200.0, 600.0))
 
     var ids <- [{for k in keys(ally_units); k}]
     for enemy in values(enemy_units)

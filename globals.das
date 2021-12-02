@@ -6,3 +6,4 @@ var
     selection: array<int>
     seed: int4
     game_is_active: bool = false
+    calc_collision_on: bool = false
