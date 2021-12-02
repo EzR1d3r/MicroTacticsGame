@@ -8,6 +8,7 @@ var
     round_idx: int = 0
 
 def clear_units
+    clear(selection)
     clear(ally_units)
     clear(enemy_units)
 

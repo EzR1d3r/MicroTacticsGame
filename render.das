@@ -92,6 +92,6 @@ def main_menu
     text_out(screen_width/2 - int(size.x/2.0), screen_height/4 + 100, text, 0xFFFFFFFF)
 
     set_font_size(30)
-    text = "PRESS [SPACE] OR [1-{length(rounds)}] TO CHOOSE ROUND"
+    text = "PRESS [SPACE] TO PAUSE OR [1-{length(rounds)}] TO CHOOSE ROUND"
     size = get_text_size(text)
     text_out(screen_width/2 - int(size.x/2.0), screen_height/4 + 200, text, 0xFFFFFFFF)
