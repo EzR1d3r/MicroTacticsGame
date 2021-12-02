@@ -27,7 +27,8 @@ struct Unit
 
 class Command
     def abstract process(var unit: Unit; dt: float): void
-    def abstract is_done(var unit: Unit): bool
+    def is_done(var unit: Unit): bool
+        return unit.hp <= 0
     def abstract done(var unit: Unit): void
 
 
@@ -38,7 +39,7 @@ class MovePos: Command
         pos = pos_
 
     def override  process(var unit: Unit; dt: float)
-        if is_done(unit)
+        if Command`is_done(self, unit) || is_done(unit)
             done(unit)
         else
             unit.direction = normalize(pos - unit.pos)
@@ -78,11 +79,11 @@ class AttackTarget: Command
         unit.attack_cooldown = unit.attack_rate
 
     def private try_attack(var shooter: Unit; var target: Unit; dt: float)
+        shooter.direction = normalize(target.pos - shooter.pos)
         if (length(target.pos - shooter.pos) <= shooter.attack_range)
             shooter.speed = 0.0
             shoot(shooter, target, dt)
         else
-            shooter.direction = normalize(target.pos - shooter.pos)
             shooter.speed = shooter.speedMax
 
 def shoot(var shooter: Unit; var target: Unit; dt: float)

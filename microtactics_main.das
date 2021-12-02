@@ -82,8 +82,15 @@ def select
         var mouse_pos: float2 = get_mouse_position()
         clear(selection)
         for unit in values(ally_units)
-            if length(mouse_pos - unit.pos) < unit.size_radius
+            if length(mouse_pos - unit.pos) < unit.size_radius && unit.hp > 0
                 emplace(selection, unit.id)
+
+    var i = length(selection) - 1
+    while i >= 0 && length(selection) > 0
+        var id = selection[i]
+        if ally_units[id].hp <= 0
+            erase(selection, i)
+        i--
 
 def add_commands
     if get_mouse_button_down(MB_RIGHT)
@@ -97,7 +104,7 @@ def add_commands
                 clear(ally_units[id].command_queue)
 
                 for enemy in values(enemy_units)
-                    if length(mouse_pos-enemy.pos) < enemy.size_radius / 1.5
+                    if (length(mouse_pos-enemy.pos) < enemy.size_radius / 1.5) && enemy.hp > 0
                         push(ally_units[id].command_queue, new AttackTarget(enemy.id))
                         break
 
