@@ -145,7 +145,7 @@ def shoot(var shooter: Unit; var target: Unit; dt: float)
 def make_damage(var target: Unit; value: int)
     target.hp -= value
 
-def push_front(var command_queue: array<Command?>; cmd: Command?)
+def push_front(var command_queue: array<Command?>; cmd: Command?) // perhaps a crutch
     var new_queue: array<Command?>
     resize(new_queue, length(command_queue) + 1)
     new_queue[0] = cmd

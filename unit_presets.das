@@ -4,12 +4,14 @@ var
     medium_tank_hp = 180
     medium_tank_damage = 10
     medium_tank_speed_max = 80.0
-    medium_tank_attack_range = 200.0
+    medium_tank_attack_range = 250.0
+    medium_tank_attack_rate = 1.0
 
     heavy_tank_hp = 250
     heavy_tank_damage = 15
     heavy_tank_speed_max = 55.0
     heavy_tank_attack_range = 250.0
+    heavy_tank_attack_rate = 1.5
 
 def create_ally_medium_tank(pos: float2)
     var id: int = get_id()
@@ -22,6 +24,7 @@ def create_ally_medium_tank(pos: float2)
         max_hp      = medium_tank_hp,
         damage      = medium_tank_damage,
         attack_range = medium_tank_attack_range,
+        attack_rate = medium_tank_attack_rate,
         color       = 0xFF156800,
         direction   = float2(-1.0, 0.0),
         res         = [[
@@ -46,6 +49,7 @@ def create_ally_heavy_tank(pos: float2)
         max_hp      = heavy_tank_hp,
         damage      = heavy_tank_damage,
         attack_range = heavy_tank_attack_range,
+        attack_rate = heavy_tank_attack_rate,
         color       = 0xFF156800,
         direction   = float2(-1.0, 0.0),
         res         = [[
@@ -70,6 +74,7 @@ def create_enemy_medium_tank(pos: float2)
         max_hp      = medium_tank_hp,
         damage      = medium_tank_damage,
         attack_range = medium_tank_attack_range,
+        attack_rate = medium_tank_attack_rate,
         color       = 0xFFA00000,
         res         = [[
                         UnitResDef img = "tank_enemy",
@@ -92,6 +97,7 @@ def create_enemy_heavy_tank(pos: float2)
         max_hp      = heavy_tank_hp,
         damage      = heavy_tank_damage,
         attack_range = heavy_tank_attack_range,
+        attack_rate = heavy_tank_attack_rate,
         color       = 0xFF156800,
         direction   = float2(1.0, 0.0),
         res         = [[

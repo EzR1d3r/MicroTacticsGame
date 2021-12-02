@@ -97,6 +97,6 @@ def main_menu
     text_out(screen_width/2 - int(size.x/2.0), screen_height/4 + 200, text, 0xFFFFFFFF)
 
     set_font_size(30)
-    text = "PRESS [C] TO SWITCH COLLISION MODE(develop in progress) [{calc_collision_on ? "ON" : "OFF"}]"
+    text = "PRESS [C] TO SWITCH COLLISION MODE(experimental) [{calc_collision_on ? "ON" : "OFF"}]"
     size = get_text_size(text)
     text_out(screen_width/2 - int(size.x/2.0), screen_height/4 + 250, text, 0xFFFFFFFF)

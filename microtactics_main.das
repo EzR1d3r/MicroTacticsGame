@@ -110,6 +110,7 @@ def initialize
     set_window_title("MicroTactics")
     randomize_seed(seed)
     set_resolution(screen_width, screen_height)
+    init_round1()
     return
 
 // this function is called to update game data,
