@@ -2,6 +2,7 @@ require daslib/media
 require resourses
 require objects
 require globals
+require round_presets
 
 var
     image_scale_k: float const = 1.2
@@ -32,9 +33,10 @@ def render_unit_core(var u: Unit; var img: Image; color: uint = 0xFFFFFFFF)
     if u.attack_cooldown < shoot_time && u.hp > 0 && u.speed < u.speedMax // TODO, check only attack_cooldown
         render_shoot(u, images[u.res.img_shoot_sprite])
 
-    var hp_k = float(u.hp) / float(u.max_hp)
-    fill_rect(u.pos.x - u.size_radius, u.pos.y - u.size_radius - 10.0, u.size_radius * 2.0, 8.0, 0xB7FF0202)
-    fill_rect(u.pos.x - u.size_radius, u.pos.y - u.size_radius - 10.0, hp_k * u.size_radius * 2.0, 8.0, 0xFF35FF02)
+    if u.hp > 0
+        var hp_k = float(u.hp) / float(u.max_hp)
+        fill_rect(u.pos.x - u.size_radius, u.pos.y - u.size_radius - 10.0, u.size_radius * 2.0, 8.0, 0xB7FF0202)
+        fill_rect(u.pos.x - u.size_radius, u.pos.y - u.size_radius - 10.0, hp_k * u.size_radius * 2.0, 8.0, 0xFF35FF02)
 
 def render_shoot(var u: Unit; var img: Image)
     var x_size = sprite_scale_k * float(img.width) * u.size_radius / float(img.height)
@@ -45,9 +47,9 @@ def render_shoot(var u: Unit; var img: Image)
     var rotation = res_vec.y >= 0.0 ? acos(res_vec.x) : 2.0 * PI - acos(res_vec.x)
 
     var sp = float2(
-        u.pos.x + cos(rotation) * length(u.res.img_shoot_sprite_pos),
-        u.pos.y + sin(rotation) * length(u.res.img_shoot_sprite_pos)
-        ) // TODO matrix rotation
+        u.pos.x + cos(rotation) * u.res.img_shoot_sprite_pos.x - sin(rotation) * u.res.img_shoot_sprite_pos.y,
+        u.pos.y + sin(rotation) * u.res.img_shoot_sprite_pos.x + cos(rotation) * u.res.img_shoot_sprite_pos.y
+        )
 
     //draw img
     img |> draw_image_transformed(
@@ -90,6 +92,6 @@ def main_menu
     text_out(screen_width/2 - int(size.x/2.0), screen_height/4 + 100, text, 0xFFFFFFFF)
 
     set_font_size(30)
-    text = "PRESS [SPACE]"
+    text = "PRESS [SPACE] OR [1-{length(rounds)}] TO CHOOSE ROUND"
     size = get_text_size(text)
     text_out(screen_width/2 - int(size.x/2.0), screen_height/4 + 200, text, 0xFFFFFFFF)

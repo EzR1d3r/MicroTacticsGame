@@ -6,7 +6,9 @@ var
         "tank_enemy"=>create_image("resources/tank_enemy.png");
         "tank_dead"=>create_image("resources/tank_dead.png");
         "shoot_sprite"=>create_image("resources/shoot_sprite.png");
-        "background"=>create_image("resources/background.jpg")
+        "background"=>create_image("resources/background.jpg");
+        "heavy_tank_ally"=>create_image("resources/heavy_tank_ally.png");
+        "heavy_tank_enemy"=>create_image("resources/heavy_tank_enemy.png")
         }}
 
     sounds: table<string; PcmSound> <- {{

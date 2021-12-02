@@ -1,60 +1,12 @@
 require daslib/media
-require graphics
-require dasbox
 require objects
 require resourses
 require render
 require globals
+require round_presets
 // options debugger            // uncomment for debug in VS Code
 // require daslib/debug        // uncomment for debug in VS Code
 
-var
-    medium_tank_hp = 180
-    medium_tank_damage = 20
-
-def create_ally_unit(pos: float2)
-    var id: int = get_id()
-    ally_units[id] <- [[
-        Unit() id   = id,
-        pos         = pos,
-        size_radius = 60.0,
-        speedMax    = 80.0,
-        hp          = medium_tank_hp,
-        max_hp      = medium_tank_hp,
-        damage      = medium_tank_damage,
-        color       = 0xFF156800,
-        direction   = float2(-1.0, 0.0),
-        res         = [[
-                        UnitResDef
-                        img = "tank_ally",
-                        img_dead = "tank_dead",
-                        img_shoot_sprite = "shoot_sprite",
-                        snd_start_move = "medium_tank_start_move",
-                        snd_shoot = "medium_tank_shoot",
-                        img_shoot_sprite_pos = float2(80.0, 0.0)
-                    ]]
-        ]]
-
-def create_enemy_unit(pos: float2)
-    var id: int = get_id()
-    enemy_units[id] <- [[
-        Unit() id   = id,
-        pos         = pos,
-        size_radius = 60.0,
-        speedMax    = 80.0,
-        hp          = medium_tank_hp,
-        max_hp      = medium_tank_hp,
-        damage      = medium_tank_damage,
-        color       = 0xFFA00000,
-        res         = [[
-                        UnitResDef img = "tank_enemy",
-                        img_dead = "tank_dead",
-                        img_shoot_sprite = "shoot_sprite",
-                        snd_start_move = "medium_tank_start_move",
-                        snd_shoot = "medium_tank_shoot",
-                        img_shoot_sprite_pos = float2(80.0, 0.0)
-                    ]]
-        ]]
 
 def select
     if get_mouse_button_down(MB_LEFT)
@@ -108,34 +60,18 @@ def move_units(dt: float; var map: table<int; Unit>)
     for unit in values(map)
         unit.pos += unit.speed* unit.direction * dt
 
-def clear_units
-    clear(ally_units)
-    clear(enemy_units)
-
-def init_round1
-    clear_units()
-    create_ally_unit(float2(1000.0, 100.0))
-    create_ally_unit(float2(1000.0, 200.0))
-    create_ally_unit(float2(1000.0, 300.0))
-    create_ally_unit(float2(1000.0, 400.0))
-
-    create_enemy_unit(float2(200.0, 100.0))
-    create_enemy_unit(float2(200.0, 200.0))
-    create_enemy_unit(float2(200.0, 300.0))
-    create_enemy_unit(float2(200.0, 400.0))
-    create_enemy_unit(float2(200.0, 500.0))
-
+def AI
     var ids <- [{for k in keys(ally_units); k}]
     for enemy in values(enemy_units)
-        var i = random_int(seed) % length(ids)
-        push(enemy.command_queue, new AttackTarget(ids[i]))
+        if length(enemy.command_queue) == 0
+            var i = random_int(seed) % length(ids)
+            push(enemy.command_queue, new AttackPassive(ids[i]))
 
 [export]
 def initialize
     set_window_title("MicroTactics")
     randomize_seed(seed)
     set_resolution(screen_width, screen_height)
-    init_round1()
     return
 
 // this function is called to update game data,
@@ -149,6 +85,12 @@ def act(dt: float)
         game_is_active = !game_is_active
 
     if !game_is_active
+        if get_key_press(VK_1)
+            start_round(VK_1)
+        elif get_key_press(VK_2)
+            start_round(VK_2)
+
+    if !game_is_active
         return
 
     select()
@@ -157,6 +99,7 @@ def act(dt: float)
     process_commands_core(dt, enemy_units)
     move_units(dt, ally_units)
     move_units(dt, enemy_units)
+    AI()
     return
 
 // this function will be called every frame after 'act',
@@ -171,7 +114,7 @@ def draw
 
     for unit in values(enemy_units)
         render_unit(unit)
-        render_debug_info(unit)
+        // render_debug_info(unit)
 
     for id in selection
         if key_exists(ally_units, id)

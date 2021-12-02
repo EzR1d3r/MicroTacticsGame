@@ -96,6 +96,43 @@ class AttackTarget: Command
         else
             shooter.speed = shooter.speedMax
 
+
+class AttackPassive: Command
+    target_id: int
+
+    def AttackPassive(var target_id_: int)
+        target_id = target_id_
+
+    def override process(var unit: Unit; dt: float)
+        if Command`is_done(self, unit) || is_done(unit)
+            done(unit)
+        else
+            if key_exists(enemy_units, target_id)
+                try_attack(unit, enemy_units[target_id], dt)
+            elif key_exists(ally_units, target_id)
+                try_attack(unit, ally_units[target_id], dt)
+
+    def override is_done(unit: Unit): bool
+        if key_exists(ally_units, target_id)
+            return is_dead_or_missed(unit, ally_units)
+        elif key_exists(enemy_units, target_id)
+            return is_dead_or_missed(unit, enemy_units)
+
+        return true
+
+    def private is_dead_or_missed(unit: Unit; var map: table<int; Unit>)
+        return map[target_id].hp <= 0 || length(map[target_id].pos - unit.pos) > unit.attack_range
+
+    def override done(var unit: Unit)
+        unit.attack_cooldown = unit.attack_rate
+        unit.speed = 0.0
+
+    def private try_attack(var shooter: Unit; var target: Unit; dt: float)
+        shooter.direction = normalize(target.pos - shooter.pos)
+        if (length(target.pos - shooter.pos) <= shooter.attack_range)
+            shooter.speed = 0.0
+            shoot(shooter, target, dt)
+
 def shoot(var shooter: Unit; var target: Unit; dt: float)
     if shooter.attack_cooldown < shooter.attack_rate
         shooter.attack_cooldown+=dt

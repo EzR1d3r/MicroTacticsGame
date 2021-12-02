@@ -1,3 +1,5 @@
+require daslib/media
+
 var
     screen_width = 1440
     screen_height = 800
