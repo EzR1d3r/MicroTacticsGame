@@ -18,14 +18,15 @@ def create_ally_unit(pos: float2)
     ally_units[id] <- [[
         Unit() id=id,
         pos=pos, size_radius=60.0, speedMax=80.0, hp=40, max_hp=40, damage=5,
-        color = 0xFF156800, direction = float2(-1.0, 0.0),
+        color = 0xFF156800, direction = float2(1.0, 0.0),
         res = [[
             UnitResDef
             img = "tank_ally",
             img_dead = "tank_dead",
-            img_shoot = "medium_tank_shoot",
+            img_shoot_sprite = "shoot_sprite",
             snd_start_move = "medium_tank_start_move",
-            snd_shoot = "medium_tank_shoot"
+            snd_shoot = "medium_tank_shoot",
+            img_shoot_sprite_pos = float2(80.0, 0.0)
             ]]
         ]]
 
@@ -34,8 +35,9 @@ def create_enemy_unit(pos: float2)
     enemy_units[id] <- [[
         Unit() id=id, pos=pos, size_radius=60.0, speedMax=80.0, hp=40, max_hp=40, damage=5, color = 0xFFA00000,
         res = [[
-            UnitResDef img = "tank_enemy", img_dead = "tank_dead",
-            snd_start_move = "medium_tank_start_move", snd_shoot = "medium_tank_shoot"
+            UnitResDef img = "tank_enemy", img_dead = "tank_dead", img_shoot_sprite = "shoot_sprite",
+            snd_start_move = "medium_tank_start_move", snd_shoot = "medium_tank_shoot",
+            img_shoot_sprite_pos = float2(80.0, 0.0)
             ]]
         ]]
 
@@ -82,6 +84,7 @@ def process_commands_core(dt: float; var map: table<int; Unit>)
             v.command_queue[idx]->process(v, dt)
 
             if v.command_queue[idx]->is_done(v)
+                v.command_queue[idx]->done(v)
                 erase(v.command_queue, idx)
             else
                 idx++
@@ -137,6 +140,7 @@ def draw
     common_render()
     for unit in values(ally_units)
         render_unit(unit)
+        render_debug_info(unit)
 
     for unit in values(enemy_units)
         render_unit(unit)

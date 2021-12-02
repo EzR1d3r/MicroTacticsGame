@@ -29,7 +29,8 @@ struct Unit
 struct UnitResDef
     img: string
     img_dead: string
-    img_shoot: string
+    img_shoot_sprite: string
+    img_shoot_sprite_pos: float2
     snd_start_move: string
     snd_shoot: string
 

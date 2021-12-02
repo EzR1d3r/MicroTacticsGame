@@ -5,6 +5,7 @@ var
         "tank_ally"=>create_image("resources/tank_ally.png");
         "tank_enemy"=>create_image("resources/tank_enemy.png");
         "tank_dead"=>create_image("resources/tank_dead.png");
+        "shoot_sprite"=>create_image("resources/shoot_sprite.png");
         "background"=>create_image("resources/background.jpg")
         }}
 

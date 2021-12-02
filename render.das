@@ -4,6 +4,8 @@ require objects
 
 var
     image_scale_k: float const = 1.2
+    sprite_scale_k: float const = 0.3
+    shoot_time: float const = 0.2
 
 def common_render
     images["background"] |> draw_image(0.0, 0.0)
@@ -16,7 +18,6 @@ def render_unit_core(var u: Unit; var img: Image; color: uint = 0xFFFFFFFF)
 
     var x_size = image_scale_k * float(img.width) * u.size_radius / float(img.height)
     var y_size = image_scale_k * float(img.height) * u.size_radius / float(img.height)
-    var ky = u.size_radius / float(img.height)
 
     //calc rotation
     var res_vec = normalize(u.direction)
@@ -27,9 +28,31 @@ def render_unit_core(var u: Unit; var img: Image; color: uint = 0xFFFFFFFF)
         u.pos.x, u.pos.y, float4(0.0, 0.0, float(img.width), float(img.height)), color, float2(x_size, y_size), rotation
         )
 
+    if u.attack_cooldown < shoot_time && u.hp > 0 && u.speed < u.speedMax // TODO, check only attack_cooldown
+        render_shoot(u, images[u.res.img_shoot_sprite])
+
     var hp_k = float(u.hp) / float(u.max_hp)
     fill_rect(u.pos.x - u.size_radius, u.pos.y - u.size_radius - 10.0, u.size_radius * 2.0, 8.0, 0xB7FF0202)
     fill_rect(u.pos.x - u.size_radius, u.pos.y - u.size_radius - 10.0, hp_k * u.size_radius * 2.0, 8.0, 0xFF35FF02)
+
+def render_shoot(var u: Unit; var img: Image)
+    var x_size = sprite_scale_k * float(img.width) * u.size_radius / float(img.height)
+    var y_size = sprite_scale_k * float(img.height) * u.size_radius / float(img.height)
+
+    //calc rotation
+    var res_vec = normalize(u.direction)
+    var rotation = res_vec.y >= 0.0 ? acos(res_vec.x) : 2.0 * PI - acos(res_vec.x)
+
+    var sp = float2(
+        u.pos.x + cos(rotation) * length(u.res.img_shoot_sprite_pos),
+        u.pos.y + sin(rotation) * length(u.res.img_shoot_sprite_pos)
+        ) // TODO matrix rotation
+
+    //draw img
+    img |> draw_image_transformed(
+        sp.x, sp.y,
+        float4(0.0, 0.0, float(img.width), float(img.height)), 0xFFFFFFFF, float2(x_size, y_size), rotation
+        )
 
 def render_unit(var u: Unit)
     if u.hp > 0
