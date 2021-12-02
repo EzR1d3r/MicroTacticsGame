@@ -1,4 +1,5 @@
 require daslib/media
+require resourses
 
 var
     ally_units: table<int; Unit>
@@ -23,7 +24,14 @@ struct Unit
     attack_rate: float const = 1.0
     attack_cooldown: float = 1.0
     command_queue: array<Command?>
+    res: UnitResDef
 
+struct UnitResDef
+    img: string
+    img_dead: string
+    img_shoot: string
+    snd_start_move: string
+    snd_shoot: string
 
 class Command
     def abstract process(var unit: Unit; dt: float): void
@@ -62,7 +70,7 @@ class AttackTarget: Command
         target_id = target_id_
 
     def override process(var unit: Unit; dt: float)
-        if is_done(unit)
+        if Command`is_done(self, unit) || is_done(unit)
             done(unit)
         else
             if key_exists(enemy_units, target_id)
@@ -91,6 +99,7 @@ def shoot(var shooter: Unit; var target: Unit; dt: float)
         shooter.attack_cooldown+=dt
     else
         if target.hp > 0
+            res_play_sound(shooter.res.snd_shoot)
             make_damage(target, shooter.damage)
             shooter.attack_cooldown = 0.0
 
