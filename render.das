@@ -1,6 +1,7 @@
 require daslib/media
 require resourses
 require objects
+require globals
 
 var
     image_scale_k: float const = 1.2
@@ -68,8 +69,27 @@ def render_debug_info(var u: Unit)
     text_out(u.pos.x, u.pos.y+45.0, "CM {length(u.command_queue)}", 0xFFFFFFFF)
     text_out(u.pos.x, u.pos.y+60.0, "HP {u.hp}", 0xFFFFFFFF)
     text_out(u.pos.x, u.pos.y+75.0, "CD {u.attack_cooldown}", 0xFFFFFFFF)
+    text_out(u.pos.x, u.pos.y+90.0, "SP {u.speed}", 0xFFFFFFFF)
 
 def render_cursor
     var mouse_pos: float2 = get_mouse_position()
-    text_out(mouse_pos.x, mouse_pos.y, "X {mouse_pos.x}", 0xFFFFFFFF)
-    text_out(mouse_pos.x, mouse_pos.y+15.0, "Y {mouse_pos.y}", 0xFFFFFFFF)
+    // text_out(mouse_pos.x, mouse_pos.y, "X {mouse_pos.x}", 0xFFFFFFFF)
+    // text_out(mouse_pos.x, mouse_pos.y+15.0, "Y {mouse_pos.y}", 0xFFFFFFFF)
+
+def main_menu
+    fill_rect(0.0, 0.0, float(screen_width), float(screen_height), 0x9D000000)
+
+    set_font_size(80)
+    var text = "Micro Tactics Game"
+    var size = get_text_size(text)
+    text_out(screen_width/2 - int(size.x/2.0), screen_height/4, text, 0xFFFFFFFF)
+
+    set_font_size(30)
+    text = "Defeat the superior enemy with limited forces."
+    size = get_text_size(text)
+    text_out(screen_width/2 - int(size.x/2.0), screen_height/4 + 100, text, 0xFFFFFFFF)
+
+    set_font_size(30)
+    text = "PRESS [SPACE]"
+    size = get_text_size(text)
+    text_out(screen_width/2 - int(size.x/2.0), screen_height/4 + 200, text, 0xFFFFFFFF)

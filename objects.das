@@ -86,6 +86,7 @@ class AttackTarget: Command
 
     def override done(var unit: Unit)
         unit.attack_cooldown = unit.attack_rate
+        unit.speed = 0.0
 
     def private try_attack(var shooter: Unit; var target: Unit; dt: float)
         shooter.direction = normalize(target.pos - shooter.pos)
